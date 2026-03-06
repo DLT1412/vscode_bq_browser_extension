@@ -1,0 +1,116 @@
+{
+  "name": "BigQuery SQL",
+  "scopeName": "source.bigquerysql",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#functions" },
+    { "include": "#types" },
+    { "include": "#operators" },
+    { "include": "#backtick-references" },
+    { "include": "#variables" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-dash.bigquerysql",
+          "match": "--.*$"
+        },
+        {
+          "name": "comment.block.bigquerysql",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.bigquerysql",
+          "begin": "'",
+          "end": "'",
+          "patterns": [{ "name": "constant.character.escape.bigquerysql", "match": "\\\\." }]
+        },
+        {
+          "name": "string.quoted.double.bigquerysql",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [{ "name": "constant.character.escape.bigquerysql", "match": "\\\\." }]
+        },
+        {
+          "name": "string.quoted.triple.bigquerysql",
+          "begin": "'''",
+          "end": "'''"
+        },
+        {
+          "name": "string.quoted.triple.double.bigquerysql",
+          "begin": "\"\"\"",
+          "end": "\"\"\""
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.bigquerysql",
+          "match": "\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.bigquerysql",
+          "match": "(?i)\\b(SELECT|FROM|WHERE|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL|TRUE|FALSE|AS|ON|JOIN|INNER|LEFT|RIGHT|FULL|OUTER|CROSS|UNION|ALL|DISTINCT|GROUP|BY|ORDER|ASC|DESC|HAVING|LIMIT|OFFSET|WITH|RECURSIVE|CASE|WHEN|THEN|ELSE|END|INSERT|INTO|VALUES|UPDATE|SET|DELETE|MERGE|USING|MATCHED|CREATE|DROP|ALTER|TABLE|VIEW|FUNCTION|PROCEDURE|SCHEMA|TEMP|TEMPORARY|IF|REPLACE|OR|RETURNS|LANGUAGE|OPTIONS|EXPORT|DATA|IMPORT|GRANT|REVOKE|EXCEPT|INTERSECT|UNNEST|TABLESAMPLE|PIVOT|UNPIVOT|QUALIFY|WINDOW|OVER|PARTITION|ROWS|RANGE|UNBOUNDED|PRECEDING|FOLLOWING|CURRENT|ROW|NULLS|FIRST|LAST|ROLLUP|CUBE|GROUPING|SETS|ANY|SOME|ARRAY|STRUCT|INTERVAL|FOR|SYSTEM|TIME|DECLARE|EXECUTE|IMMEDIATE|BEGIN|TRANSACTION|COMMIT|ROLLBACK|RAISE|RETURN|LOOP|WHILE|BREAK|CONTINUE|ITERATE|LEAVE|CALL|ASSERT)\\b"
+        },
+        {
+          "name": "constant.language.bigquerysql",
+          "match": "(?i)\\b(NULL|TRUE|FALSE|CURRENT_TIMESTAMP|CURRENT_DATE|CURRENT_TIME|CURRENT_DATETIME)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "support.function.bigquerysql",
+          "match": "(?i)\\b(COUNT|SUM|AVG|MIN|MAX|ANY_VALUE|ARRAY_AGG|ARRAY_CONCAT_AGG|BIT_AND|BIT_OR|BIT_XOR|COUNTIF|LOGICAL_AND|LOGICAL_OR|STRING_AGG|APPROX_COUNT_DISTINCT|APPROX_QUANTILES|APPROX_TOP_COUNT|APPROX_TOP_SUM|CORR|COVAR_POP|COVAR_SAMP|STDDEV|STDDEV_POP|STDDEV_SAMP|VAR_POP|VAR_SAMP|VARIANCE|ABS|ACOS|ACOSH|ASIN|ASINH|ATAN|ATAN2|ATANH|CBRT|CEIL|CEILING|COS|COSH|COT|COTH|CSC|CSCH|DIV|EXP|FLOOR|GREATEST|IEEE_DIVIDE|IS_INF|IS_NAN|LEAST|LN|LOG|LOG10|LOG2|MOD|PI|POW|POWER|RAND|RANGE_BUCKET|ROUND|SAFE_DIVIDE|SAFE_MULTIPLY|SAFE_NEGATE|SAFE_ADD|SAFE_SUBTRACT|SEC|SECH|SIGN|SIN|SINH|SQRT|TAN|TANH|TRUNC|CAST|SAFE_CAST|PARSE_BIGNUMERIC|PARSE_NUMERIC|BYTE_LENGTH|CHAR_LENGTH|CHARACTER_LENGTH|CHR|CODE_POINTS_TO_BYTES|CODE_POINTS_TO_STRING|COLLATE|CONCAT|CONTAINS_SUBSTR|ENDS_WITH|FORMAT|FROM_BASE32|FROM_BASE64|FROM_HEX|INITCAP|INSTR|LEFT|LENGTH|LOWER|LPAD|LTRIM|NORMALIZE|NORMALIZE_AND_CASEFOLD|OCTET_LENGTH|REGEXP_CONTAINS|REGEXP_EXTRACT|REGEXP_EXTRACT_ALL|REGEXP_INSTR|REGEXP_REPLACE|REGEXP_SUBSTR|REPEAT|REPLACE|REVERSE|RIGHT|RPAD|RTRIM|SAFE_CONVERT_BYTES_TO_STRING|SOUNDEX|SPLIT|STARTS_WITH|STRPOS|SUBSTR|SUBSTRING|TO_BASE32|TO_BASE64|TO_CODE_POINTS|TO_HEX|TRANSLATE|TRIM|UNICODE|UPPER|CURRENT_DATE|CURRENT_DATETIME|CURRENT_TIME|CURRENT_TIMESTAMP|DATE|DATETIME|EXTRACT|DATE_ADD|DATE_SUB|DATE_DIFF|DATE_TRUNC|DATE_FROM_UNIX_DATE|FORMAT_DATE|LAST_DAY|PARSE_DATE|UNIX_DATE|DATETIME_ADD|DATETIME_SUB|DATETIME_DIFF|DATETIME_TRUNC|FORMAT_DATETIME|PARSE_DATETIME|TIME_ADD|TIME_SUB|TIME_DIFF|TIME_TRUNC|FORMAT_TIME|PARSE_TIME|TIMESTAMP_ADD|TIMESTAMP_SUB|TIMESTAMP_DIFF|TIMESTAMP_TRUNC|FORMAT_TIMESTAMP|PARSE_TIMESTAMP|TIMESTAMP_MICROS|TIMESTAMP_MILLIS|TIMESTAMP_SECONDS|UNIX_MICROS|UNIX_MILLIS|UNIX_SECONDS|GENERATE_ARRAY|GENERATE_DATE_ARRAY|GENERATE_TIMESTAMP_ARRAY|ARRAY_CONCAT|ARRAY_LENGTH|ARRAY_REVERSE|ARRAY_TO_STRING|IF|IFF|IFNULL|NULLIF|COALESCE|NVL|ROW_NUMBER|RANK|DENSE_RANK|PERCENT_RANK|CUME_DIST|NTILE|LAG|LEAD|FIRST_VALUE|LAST_VALUE|NTH_VALUE|FARM_FINGERPRINT|MD5|SHA1|SHA256|SHA512|JSON_EXTRACT|JSON_EXTRACT_SCALAR|JSON_EXTRACT_ARRAY|JSON_EXTRACT_STRING_ARRAY|JSON_QUERY|JSON_QUERY_ARRAY|JSON_VALUE|JSON_VALUE_ARRAY|TO_JSON|TO_JSON_STRING|PARSE_JSON|JSON_TYPE|ST_GEOGPOINT|ST_MAKELINE|ST_MAKEPOLYGON|ST_GEOGFROMGEOJSON|ST_GEOGFROMTEXT|ST_GEOGFROMWKB|ST_ASGEOJSON|ST_ASTEXT|ST_ASBINARY|ST_DISTANCE|ST_CONTAINS|ST_INTERSECTS|ST_WITHIN|ST_AREA|ST_LENGTH|ST_CENTROID|ST_UNION|ST_INTERSECTION|ST_DIFFERENCE|ST_BUFFER|NET_HOST|NET_PUBLIC_SUFFIX|NET_REG_DOMAIN|NET_IP_FROM_STRING|NET_IP_TO_STRING|NET_IP_NET_MASK|NET_IP_TRUNC|ERROR|GENERATE_UUID|SESSION_USER)(?=\\s*\\()"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.bigquerysql",
+          "match": "(?i)\\b(INT64|INT|SMALLINT|INTEGER|BIGINT|TINYINT|BYTEINT|FLOAT64|FLOAT|NUMERIC|BIGNUMERIC|DECIMAL|BIGDECIMAL|BOOL|BOOLEAN|STRING|BYTES|DATE|DATETIME|TIME|TIMESTAMP|GEOGRAPHY|JSON|INTERVAL|ARRAY|STRUCT|RECORD|RANGE)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.bigquerysql",
+          "match": "(=|<>|!=|<|>|<=|>=|\\+|-|\\*|/|\\|\\||<<|>>|&|\\||\\^|~)"
+        }
+      ]
+    },
+    "backtick-references": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.bigquerysql",
+          "match": "`[^`]+`"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.bigquerysql",
+          "match": "@[a-zA-Z_][a-zA-Z0-9_]*"
+        }
+      ]
+    }
+  }
+}

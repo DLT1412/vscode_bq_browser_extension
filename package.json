@@ -1,0 +1,486 @@
+{
+  "name": "bigquery-browser",
+  "displayName": "BigQuery Browser",
+  "description": "Browse BigQuery assets, write SQL, and view results — all inside VS Code",
+  "version": "0.1.0",
+  "publisher": "duclt",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DLT1412/vscode_bq_browser_extension.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Data Science"
+  ],
+  "keywords": [
+    "bigquery",
+    "sql",
+    "google cloud",
+    "database",
+    "data"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "icon": "resources/icon.png",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bigquery-browser",
+          "title": "BigQuery Browser",
+          "icon": "resources/bigquery-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "bigquery-browser": [
+        {
+          "id": "bigqueryExplorer",
+          "name": "Explorer"
+        },
+        {
+          "id": "bigqueryHistory",
+          "name": "Query History"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "bigqueryBrowser.runQuery",
+        "title": "Run Query",
+        "icon": "$(play)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.dryRun",
+        "title": "Dry Run (Estimate Cost)",
+        "icon": "$(dollar)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.refreshExplorer",
+        "title": "Refresh Explorer",
+        "icon": "$(refresh)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.copyTableReference",
+        "title": "Copy Table Reference",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.previewTable",
+        "title": "Preview Data",
+        "icon": "$(eye)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.viewSchema",
+        "title": "View Schema",
+        "icon": "$(symbol-structure)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.clearHistory",
+        "title": "Clear History",
+        "icon": "$(clear-all)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.runFromHistory",
+        "title": "Run Again",
+        "icon": "$(play)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.viewHistorySql",
+        "title": "View SQL",
+        "icon": "$(file-code)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.viewHistoryResults",
+        "title": "View Results",
+        "icon": "$(table)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.filterExplorer",
+        "title": "Filter Explorer",
+        "icon": "$(filter)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.clearFilter",
+        "title": "Clear Explorer Filter",
+        "icon": "$(clear-all)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.newQueryFile",
+        "title": "New BigQuery SQL File",
+        "icon": "$(new-file)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.setDefaultProject",
+        "title": "Set Default Browse Project",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.setExecutionProject",
+        "title": "Set Default Execution Project",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.setDefaultRegion",
+        "title": "Set Default Region",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.setMaxBytesBilled",
+        "title": "Set Maximum Bytes Billed (Cost Limit)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.renameHistoryEntry",
+        "title": "Rename",
+        "icon": "$(edit)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.filterHistory",
+        "title": "Filter History",
+        "icon": "$(filter)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.clearHistoryFilter",
+        "title": "Clear History Filter",
+        "icon": "$(clear-all)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.deleteHistoryEntry",
+        "title": "Delete",
+        "icon": "$(trash)",
+        "category": "BigQuery"
+      },
+      {
+        "command": "bigqueryBrowser.copyHistorySql",
+        "title": "Copy SQL",
+        "icon": "$(copy)",
+        "category": "BigQuery"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "bigqueryBrowser.refreshExplorer",
+          "when": "view == bigqueryExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "bigqueryBrowser.filterExplorer",
+          "when": "view == bigqueryExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "bigqueryBrowser.newQueryFile",
+          "when": "view == bigqueryExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "bigqueryBrowser.filterHistory",
+          "when": "view == bigqueryHistory",
+          "group": "navigation"
+        },
+        {
+          "command": "bigqueryBrowser.clearHistory",
+          "when": "view == bigqueryHistory",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "bigqueryBrowser.copyTableReference",
+          "when": "view == bigqueryExplorer && (viewItem == table || viewItem == view)",
+          "group": "1_actions"
+        },
+        {
+          "command": "bigqueryBrowser.previewTable",
+          "when": "view == bigqueryExplorer && viewItem == table",
+          "group": "1_actions"
+        },
+        {
+          "command": "bigqueryBrowser.viewSchema",
+          "when": "view == bigqueryExplorer && (viewItem == table || viewItem == view)",
+          "group": "1_actions"
+        },
+        {
+          "command": "bigqueryBrowser.runFromHistory",
+          "when": "view == bigqueryHistory && viewItem == historyEntry",
+          "group": "inline"
+        },
+        {
+          "command": "bigqueryBrowser.viewHistorySql",
+          "when": "view == bigqueryHistory && viewItem == historyEntry",
+          "group": "1_actions"
+        },
+        {
+          "command": "bigqueryBrowser.viewHistoryResults",
+          "when": "view == bigqueryHistory && viewItem == historyEntry",
+          "group": "1_actions"
+        },
+        {
+          "command": "bigqueryBrowser.copyHistorySql",
+          "when": "view == bigqueryHistory && viewItem == historyEntry",
+          "group": "1_actions"
+        },
+        {
+          "command": "bigqueryBrowser.renameHistoryEntry",
+          "when": "view == bigqueryHistory && viewItem == historyEntry",
+          "group": "2_manage"
+        },
+        {
+          "command": "bigqueryBrowser.deleteHistoryEntry",
+          "when": "view == bigqueryHistory && viewItem == historyEntry",
+          "group": "2_manage"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "bigqueryBrowser.runQuery",
+          "when": "resourceLangId == bigquerysql",
+          "group": "navigation@1"
+        },
+        {
+          "command": "bigqueryBrowser.dryRun",
+          "when": "resourceLangId == bigquerysql",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "bigquerysql",
+        "aliases": [
+          "BigQuery SQL",
+          "bqsql"
+        ],
+        "extensions": [
+          ".bqsql",
+          ".bq"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "bigquerysql",
+        "scopeName": "source.bigquerysql",
+        "path": "./syntaxes/bigquerysql.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "BigQuery Browser",
+      "properties": {
+        "bigqueryBrowser.projectId": {
+          "type": "string",
+          "default": "",
+          "description": "Default Google Cloud project ID for browsing datasets and tables"
+        },
+        "bigqueryBrowser.executionProjectId": {
+          "type": "string",
+          "default": "",
+          "description": "Project ID for query execution and billing (falls back to projectId if empty)"
+        },
+        "bigqueryBrowser.keyFilePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to service account key JSON file (leave empty for ADC)"
+        },
+        "bigqueryBrowser.maxResults": {
+          "type": "number",
+          "default": 50,
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "Maximum number of rows to fetch per page"
+        },
+        "bigqueryBrowser.location": {
+          "type": "string",
+          "default": "US",
+          "description": "Default BigQuery location for queries"
+        },
+        "bigqueryBrowser.queryHistoryLimit": {
+          "type": "number",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 500,
+          "description": "Maximum number of queries to keep in history"
+        },
+        "bigqueryBrowser.autoDryRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically estimate query cost as you type in .bqsql files"
+        },
+        "bigqueryBrowser.maximumBytesBilledGb": {
+          "type": "number",
+          "default": 200,
+          "minimum": 0,
+          "description": "Maximum bytes billed per query in GB (safety limit). Set 0 to disable."
+        },
+        "bigqueryBrowser.costPerTbUsd": {
+          "type": "number",
+          "default": 6.25,
+          "minimum": 0,
+          "description": "Cost per TB in USD for query cost estimation. Default $6.25 is on-demand pricing. Set to 0 for flat-rate/editions billing."
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "bigqueryBrowser.getStarted",
+        "title": "Get Started with BigQuery Browser",
+        "description": "Set up your BigQuery connection and start querying.",
+        "steps": [
+          {
+            "id": "authenticate",
+            "title": "Authenticate with Google Cloud",
+            "description": "Run ``gcloud auth application-default login`` in your terminal, or set a service account key path in settings.\n[Open Settings](command:workbench.action.openSettings?%5B%22bigqueryBrowser.keyFilePath%22%5D)",
+            "media": {
+              "markdown": "docs/walkthrough-auth.md"
+            }
+          },
+          {
+            "id": "setDefaultProject",
+            "title": "Set Default Browse Project",
+            "description": "Choose the GCP project whose datasets and tables appear in the Explorer sidebar.\n[Set Browse Project](command:bigqueryBrowser.setDefaultProject)",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "Set default project"
+            },
+            "completionEvents": [
+              "onCommand:bigqueryBrowser.setDefaultProject"
+            ]
+          },
+          {
+            "id": "setExecutionProject",
+            "title": "Set Execution Project (billing)",
+            "description": "Choose the GCP project used for query execution and billing. If empty, the browse project is used.\n[Set Execution Project](command:bigqueryBrowser.setExecutionProject)",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "Set execution project"
+            },
+            "completionEvents": [
+              "onCommand:bigqueryBrowser.setExecutionProject"
+            ]
+          },
+          {
+            "id": "setDefaultRegion",
+            "title": "Set Default Region",
+            "description": "Set the default BigQuery location for running queries (e.g. US, EU, asia-southeast1).\n[Set Default Region](command:bigqueryBrowser.setDefaultRegion)",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "Set default region"
+            },
+            "completionEvents": [
+              "onCommand:bigqueryBrowser.setDefaultRegion"
+            ]
+          },
+          {
+            "id": "setMaxBytesBilled",
+            "title": "Set Cost Limit (Max Bytes Billed)",
+            "description": "Set a safety limit on how much data a single query can process. Default is 200 GB. Set to 0 to disable.\n[Set Cost Limit](command:bigqueryBrowser.setMaxBytesBilled)",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "Set cost limit"
+            },
+            "completionEvents": [
+              "onCommand:bigqueryBrowser.setMaxBytesBilled"
+            ]
+          },
+          {
+            "id": "openExplorer",
+            "title": "Open BigQuery Explorer",
+            "description": "Click the BigQuery icon in the Activity Bar to browse your project's datasets and tables.\n[Open Explorer](command:workbench.view.extension.bigquery-browser)",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "BigQuery Explorer"
+            },
+            "completionEvents": [
+              "onView:bigqueryExplorer"
+            ]
+          },
+          {
+            "id": "createQueryFile",
+            "title": "Create a .bqsql Query File",
+            "description": "Create a new BigQuery SQL file with syntax highlighting, auto dry-run, and inline error diagnostics.\n[New Query File](command:bigqueryBrowser.newQueryFile)",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "New query file"
+            },
+            "completionEvents": [
+              "onCommand:bigqueryBrowser.newQueryFile"
+            ]
+          },
+          {
+            "id": "runQuery",
+            "title": "Run Your First Query",
+            "description": "Press **Cmd+Enter** (Mac) or **Ctrl+Enter** (Windows/Linux) in a .bqsql file to execute your query. Use ``-- @project:`` and ``-- @region:`` directives to override per-query settings.",
+            "media": {
+              "image": "resources/bigquery-icon.svg",
+              "altText": "Run query"
+            },
+            "completionEvents": [
+              "onCommand:bigqueryBrowser.runQuery"
+            ]
+          }
+        ]
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "bigqueryBrowser.runQuery",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "resourceLangId == bigquerysql"
+      },
+      {
+        "command": "bigqueryBrowser.dryRun",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
+        "when": "resourceLangId == bigquerysql"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package": "vsce package",
+    "prepackage": "npm run build"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.9.0",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}
