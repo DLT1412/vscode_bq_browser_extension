@@ -1,14 +1,6 @@
 import * as vscode from 'vscode';
 import { BigQueryClient } from '../services/bigquery-client';
-
-/** Default cache TTL in milliseconds (24 hours) */
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-
-/** Cached entry with timestamp */
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-}
+import { AssetCacheService } from '../services/asset-cache-service';
 
 /** Types of nodes in the asset explorer tree */
 type NodeType = 'project' | 'dataset' | 'table' | 'view';
@@ -67,21 +59,34 @@ export class AssetExplorerProvider implements vscode.TreeDataProvider<AssetNode>
   private _onDidChangeTreeData = new vscode.EventEmitter<AssetNode | undefined | null>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
   private filterPattern = '';
-  private datasetCache = new Map<string, CacheEntry<{ datasetId: string; location: string }[]>>();
-  private tableCache = new Map<string, CacheEntry<{ tableId: string; type: string }[]>>();
+  /** Parsed filter: "dataset.table" → both set; "name" → both equal same value */
+  private datasetFilter = '';
+  private tableFilter = '';
 
-  constructor(private bqClient: BigQueryClient) {}
+  constructor(
+    private bqClient: BigQueryClient,
+    private cacheService: AssetCacheService,
+  ) {}
 
   /** Refresh tree and clear all caches */
   refresh(): void {
-    this.datasetCache.clear();
-    this.tableCache.clear();
+    this.cacheService.clear();
     this._onDidChangeTreeData.fire(undefined);
   }
 
-  /** Set a filter pattern and re-render tree (uses cache, no API calls) */
+  /** Set a filter pattern and re-render tree (uses cache, no API calls).
+   *  Supports "dataset.table" dot notation: first part filters datasets, second filters tables.
+   *  Without dot, the value filters both datasets and tables. */
   setFilter(pattern: string): void {
     this.filterPattern = pattern.toLowerCase();
+    const parts = this.filterPattern.split('.');
+    if (parts.length >= 2) {
+      this.datasetFilter = parts[0];
+      this.tableFilter = parts.slice(1).join('.');
+    } else {
+      this.datasetFilter = this.filterPattern;
+      this.tableFilter = this.filterPattern;
+    }
     this._onDidChangeTreeData.fire(undefined);
   }
 
@@ -95,17 +100,11 @@ export class AssetExplorerProvider implements vscode.TreeDataProvider<AssetNode>
   }
 
   async getChildren(element?: AssetNode): Promise<AssetNode[]> {
-    if (!element) {
-      return this.getProjects();
-    }
-
+    if (!element) return this.getProjects();
     switch (element.nodeType) {
-      case 'project':
-        return this.getDatasets(element.projectId);
-      case 'dataset':
-        return this.getTables(element.projectId, element.datasetId);
-      default:
-        return [];
+      case 'project': return this.getDatasets(element.projectId);
+      case 'dataset': return this.getTables(element.projectId, element.datasetId);
+      default: return [];
     }
   }
 
@@ -125,45 +124,82 @@ export class AssetExplorerProvider implements vscode.TreeDataProvider<AssetNode>
   }
 
   private async getDatasets(projectId: string): Promise<AssetNode[]> {
-    const cached = this.datasetCache.get(projectId);
-    let datasets: { datasetId: string; location: string }[];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      datasets = cached.data;
-    } else {
+    let datasets = this.cacheService.getDatasets(projectId);
+    if (!datasets) {
       datasets = await this.bqClient.listDatasets(projectId);
-      this.datasetCache.set(projectId, { data: datasets, timestamp: Date.now() });
+      this.cacheService.setDatasets(projectId, datasets);
+      // Background-prefetch tables for all datasets
+      this.prefetchTables(projectId, datasets);
     }
 
-    const filtered = this.filterPattern
-      ? datasets.filter((ds) => ds.datasetId.toLowerCase().includes(this.filterPattern))
-      : datasets;
-    return filtered.map(
-      (ds) =>
-        new AssetNode(
-          ds.datasetId,
-          'dataset',
-          projectId,
-          ds.datasetId,
-          '',
-          vscode.TreeItemCollapsibleState.Collapsed,
-        ),
-    );
+    if (!this.filterPattern) {
+      return datasets.map(
+        (ds) =>
+          new AssetNode(ds.datasetId, 'dataset', projectId, ds.datasetId, '',
+            vscode.TreeItemCollapsibleState.Collapsed),
+      );
+    }
+
+    // When filtering: include datasets matching by name OR containing matching tables (from cache)
+    const isDotFilter = this.filterPattern.includes('.');
+    const allTables = this.cacheService.getAllCachedTables(projectId);
+
+    const filtered = datasets.filter((ds) => {
+      const dsName = ds.datasetId.toLowerCase();
+      const tables = allTables.get(ds.datasetId);
+      if (isDotFilter) {
+        // "dataset.table" — dataset must match first part, and must have tables matching second part
+        if (!dsName.includes(this.datasetFilter)) return false;
+        return this.tableFilter
+          ? (tables?.some((t) => t.tableId.toLowerCase().includes(this.tableFilter)) ?? false)
+          : true;
+      }
+      // Single term — match dataset name OR any table name
+      if (dsName.includes(this.datasetFilter)) return true;
+      return tables?.some((t) => t.tableId.toLowerCase().includes(this.tableFilter)) ?? false;
+    });
+
+    return filtered.map((ds) => {
+      const dsName = ds.datasetId.toLowerCase();
+      const tables = allTables.get(ds.datasetId);
+      const tFilter = isDotFilter ? this.tableFilter : this.filterPattern;
+      const hasMatchingTables = tFilter
+        ? (tables?.some((t) => t.tableId.toLowerCase().includes(tFilter)) ?? false)
+        : false;
+      const nameMatches = dsName.includes(this.datasetFilter);
+      // Auto-expand when dataset matched via table name, or dot filter with table part
+      const state = (isDotFilter && this.tableFilter) || (!nameMatches && hasMatchingTables)
+        ? vscode.TreeItemCollapsibleState.Expanded
+        : vscode.TreeItemCollapsibleState.Collapsed;
+      return new AssetNode(ds.datasetId, 'dataset', projectId, ds.datasetId, '', state);
+    });
   }
 
   private async getTables(projectId: string, datasetId: string): Promise<AssetNode[]> {
-    const cacheKey = `${projectId}.${datasetId}`;
-    const cached = this.tableCache.get(cacheKey);
-    let tables: { tableId: string; type: string }[];
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      tables = cached.data;
-    } else {
+    let tables = this.cacheService.getTables(projectId, datasetId);
+    if (!tables) {
       tables = await this.bqClient.listTables(projectId, datasetId);
-      this.tableCache.set(cacheKey, { data: tables, timestamp: Date.now() });
+      this.cacheService.setTables(projectId, datasetId, tables);
     }
 
-    const filtered = this.filterPattern
-      ? tables.filter((t) => t.tableId.toLowerCase().includes(this.filterPattern))
-      : tables;
+    // Determine table filtering based on filter type
+    let filtered = tables;
+    if (this.filterPattern) {
+      const isDotFilter = this.filterPattern.includes('.');
+      if (isDotFilter) {
+        // Dot notation: always filter tables by second part (if present)
+        filtered = this.tableFilter
+          ? tables.filter((t) => t.tableId.toLowerCase().includes(this.tableFilter))
+          : tables;
+      } else {
+        // Single term: if dataset name matches the filter, show ALL its tables.
+        // If dataset was included only because of a table match, filter tables.
+        const datasetNameMatches = datasetId.toLowerCase().includes(this.filterPattern);
+        if (!datasetNameMatches) {
+          filtered = tables.filter((t) => t.tableId.toLowerCase().includes(this.filterPattern));
+        }
+      }
+    }
     return filtered.map(
       (t) =>
         new AssetNode(
@@ -175,5 +211,34 @@ export class AssetExplorerProvider implements vscode.TreeDataProvider<AssetNode>
           vscode.TreeItemCollapsibleState.None,
         ),
     );
+  }
+
+  /** Prefetch tables for all datasets in batches of 5 (fire-and-forget) */
+  private prefetchTables(
+    projectId: string,
+    datasets: { datasetId: string; location: string }[],
+  ): void {
+    const uncached = datasets.filter(
+      (ds) => !this.cacheService.getTables(projectId, ds.datasetId),
+    );
+    if (uncached.length === 0) return;
+
+    const BATCH_SIZE = 5;
+    (async () => {
+      for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
+        const batch = uncached.slice(i, i + BATCH_SIZE);
+        await Promise.allSettled(
+          batch.map((ds) =>
+            this.bqClient.listTables(projectId, ds.datasetId).then(
+              (tables) => this.cacheService.setTables(projectId, ds.datasetId, tables),
+            ),
+          ),
+        );
+      }
+      // Refresh tree if filter is active so newly cached tables appear in results
+      if (this.filterPattern) {
+        this._onDidChangeTreeData.fire(undefined);
+      }
+    })();
   }
 }

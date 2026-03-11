@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AuthService } from './services/auth-service';
 import { BigQueryClient, formatBytes } from './services/bigquery-client';
+import { AssetCacheService } from './services/asset-cache-service';
 import { AssetExplorerProvider, AssetNode } from './providers/asset-explorer-provider';
 import { QueryResultsProvider } from './providers/query-results-provider';
 import { QueryHistoryService } from './services/query-history-service';
@@ -19,8 +20,9 @@ export function activate(context: vscode.ExtensionContext): void {
   const bqClient = new BigQueryClient(authService);
   const historyService = new QueryHistoryService(context.globalState);
 
-  // --- Providers ---
-  const explorerProvider = new AssetExplorerProvider(bqClient);
+  // --- Cache & Providers ---
+  const cacheService = new AssetCacheService(context.globalStorageUri.fsPath);
+  const explorerProvider = new AssetExplorerProvider(bqClient, cacheService);
   const resultsProvider = new QueryResultsProvider(context.extensionUri, bqClient);
   const historyProvider = new QueryHistoryProvider(historyService);
   const metadataProvider = new TableMetadataProvider(context.extensionUri, bqClient);
@@ -320,6 +322,7 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar,
     autoDryRun,
     diagnostics,
+    { dispose: () => cacheService.dispose() },
   );
 }
 
