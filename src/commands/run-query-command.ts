@@ -55,7 +55,7 @@ export async function runQueryCommand(
         const sqlTitle = deriveQueryTitle(sql);
         resultsProvider.showResults(result, directives, sqlTitle, sql);
 
-        // Record in history
+        // Record in history — destinationTable is only present for DQL queries (SELECT/WITH)
         const config = vscode.workspace.getConfiguration('bigqueryBrowser');
         historyService?.addEntry({
           sql,

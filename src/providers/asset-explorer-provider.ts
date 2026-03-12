@@ -140,9 +140,19 @@ export class AssetExplorerProvider implements vscode.TreeDataProvider<AssetNode>
       );
     }
 
-    // When filtering: include datasets matching by name OR containing matching tables (from cache)
-    const isDotFilter = this.filterPattern.includes('.');
+    // When filtering: ensure ALL datasets have cached tables so filter results are complete.
+    // Without this, datasets whose tables aren't prefetched yet would be invisible to table-name search.
+    const uncached = datasets.filter((ds) => !this.cacheService.getTables(projectId, ds.datasetId));
+    if (uncached.length > 0) {
+      await Promise.allSettled(
+        uncached.map(async (ds) => {
+          const tables = await this.bqClient.listTables(projectId, ds.datasetId);
+          this.cacheService.setTables(projectId, ds.datasetId, tables);
+        }),
+      );
+    }
     const allTables = this.cacheService.getAllCachedTables(projectId);
+    const isDotFilter = this.filterPattern.includes('.');
 
     const filtered = datasets.filter((ds) => {
       const dsName = ds.datasetId.toLowerCase();

@@ -97,11 +97,13 @@ export function activate(context: vscode.ExtensionContext): void {
       if (value !== undefined) {
         explorerProvider.setFilter(value);
         explorerView.description = value ? `Filtered: ${value}` : undefined;
+        vscode.commands.executeCommand('setContext', 'bigqueryBrowser.explorerFilterActive', !!value);
       }
     }],
     ['bigqueryBrowser.clearFilter', () => {
       explorerProvider.setFilter('');
       explorerView.description = undefined;
+      vscode.commands.executeCommand('setContext', 'bigqueryBrowser.explorerFilterActive', false);
     }],
     ['bigqueryBrowser.viewHistorySql', async (node: unknown) => {
       if (node && typeof node === 'object' && 'entry' in node) {
@@ -278,11 +280,13 @@ export function activate(context: vscode.ExtensionContext): void {
       if (value !== undefined) {
         historyProvider.setFilter(value);
         historyView.description = value ? `Filtered: ${value}` : undefined;
+        vscode.commands.executeCommand('setContext', 'bigqueryBrowser.historyFilterActive', !!value);
       }
     }],
     ['bigqueryBrowser.clearHistoryFilter', () => {
       historyProvider.setFilter('');
       historyView.description = undefined;
+      vscode.commands.executeCommand('setContext', 'bigqueryBrowser.historyFilterActive', false);
     }],
     ['bigqueryBrowser.deleteHistoryEntry', async (node: unknown) => {
       if (node && typeof node === 'object' && 'entry' in node) {
@@ -356,6 +360,7 @@ async function runQueryFromSql(
         resultsProvider.showResults(result, hasOverrides ? queryOptions : undefined, `Re-run · ${sqlPreview}`, sql);
         statusBar.updateCost(formatBytes(Number(result.bytesProcessed)), result.cacheHit);
 
+        // destinationTable is only present for DQL queries (SELECT/WITH) from BigQuery API
         const config = vscode.workspace.getConfiguration('bigqueryBrowser');
         historyService.addEntry({
           sql,

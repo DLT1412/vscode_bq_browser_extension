@@ -91,7 +91,7 @@ export class BigQueryClient {
   }
 
   /** Maximum tables to load per dataset before suggesting filter */
-  private static readonly TABLE_LIST_LIMIT = 1000;
+  private static readonly TABLE_LIST_LIMIT = 10000;
 
   /** List tables and views in a dataset with pagination and timeout handling */
   async listTables(
@@ -268,16 +268,37 @@ export class BigQueryClient {
     const [jobMetadata] = await job.getMetadata();
     const stats = jobMetadata.statistics;
     const destTableRef = jobMetadata.configuration?.query?.destinationTable;
-    const schema = destTableRef
-      ? (await client
-          .dataset(destTableRef.datasetId)
-          .table(destTableRef.tableId)
-          .getMetadata())[0].schema?.fields || []
-      : stats?.query?.schema?.fields || [];
+    let schema = stats?.query?.schema?.fields || [];
+    let destTable: DestinationTable | undefined;
 
-    const destTable: DestinationTable | undefined = destTableRef
-      ? { projectId: destTableRef.projectId, datasetId: destTableRef.datasetId, tableId: destTableRef.tableId }
-      : undefined;
+    if (destTableRef) {
+      // Only store destinationTable for DQL queries (SELECT/WITH) that produce viewable temp results.
+      // BigQuery sets destinationTable for all query types (including DML/DDL), but only DQL temp tables
+      // are useful for free re-paging via tabledata.list.
+      const statementType = stats?.query?.statementType;
+      const isDql = statementType === 'SELECT' || statementType === 'SCRIPT' || !statementType;
+
+      if (isDql) {
+        try {
+          const [destMeta] = await client
+            .dataset(destTableRef.datasetId)
+            .table(destTableRef.tableId)
+            .getMetadata();
+          schema = destMeta.schema?.fields || schema;
+          destTable = {
+            projectId: destTableRef.projectId,
+            datasetId: destTableRef.datasetId,
+            tableId: destTableRef.tableId,
+          };
+        } catch (err) {
+          console.error(
+            `Failed to get destination table metadata: ${destTableRef.projectId}.${destTableRef.datasetId}.${destTableRef.tableId}`,
+            err instanceof Error ? err.message : err,
+          );
+          // Fall back to schema from query stats; destTable stays undefined (no paging/sort)
+        }
+      }
+    }
 
     return {
       rows: rows as Record<string, unknown>[],

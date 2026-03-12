@@ -2,7 +2,7 @@
   "name": "bigquery-browser",
   "displayName": "BigQuery Browser",
   "description": "Browse BigQuery assets, write SQL, and view results — all inside VS Code",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "LeD",
   "license": "MIT",
   "repository": {
@@ -190,6 +190,11 @@
           "group": "navigation"
         },
         {
+          "command": "bigqueryBrowser.clearFilter",
+          "when": "view == bigqueryExplorer && bigqueryBrowser.explorerFilterActive",
+          "group": "navigation"
+        },
+        {
           "command": "bigqueryBrowser.newQueryFile",
           "when": "view == bigqueryExplorer",
           "group": "navigation"
@@ -197,6 +202,11 @@
         {
           "command": "bigqueryBrowser.filterHistory",
           "when": "view == bigqueryHistory",
+          "group": "navigation"
+        },
+        {
+          "command": "bigqueryBrowser.clearHistoryFilter",
+          "when": "view == bigqueryHistory && bigqueryBrowser.historyFilterActive",
           "group": "navigation"
         },
         {
@@ -478,6 +488,7 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^2.1.0",
     "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.5.0",
