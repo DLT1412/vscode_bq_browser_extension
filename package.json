@@ -2,7 +2,7 @@
   "name": "bigquery-browser",
   "displayName": "BigQuery Browser",
   "description": "Browse BigQuery assets, write SQL, and view results — all inside VS Code",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "LeD",
   "license": "MIT",
   "repository": {
